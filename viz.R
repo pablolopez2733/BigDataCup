@@ -22,7 +22,7 @@ shots_scatter <- ggplot(shots , aes(x=X.Coordinate, y=Y.Coordinate , color = Det
     axis.title.x=element_blank(),
     axis.title.y=element_blank(),
   )+
-  labs(title = "Shot Locations for BDC sample of Women´s NCAA and Olympics data ",
+  labs(title = "Shot Locations for Big Data Cup sample of \n Women´s NCAA and Olympics game data ",
        subtitle = "Shots: 1671  | Goals: 56",
        caption = "Data: Stathlete´s Big Data Cup",
        x = NULL,
@@ -33,6 +33,7 @@ shots_scatter <- ggplot(shots , aes(x=X.Coordinate, y=Y.Coordinate , color = Det
                      name = NULL) +
   scale_x_continuous(breaks = seq(0, 100, by = 10)) +
   scale_y_continuous(breaks = seq(-40, 40, by = 10))
+
 
 shots_scatter
 
