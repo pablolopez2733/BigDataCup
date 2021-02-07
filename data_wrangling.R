@@ -25,16 +25,16 @@ data <- data %>%
   mutate(game_id = cur_group_id())
 
 # add game seconds
+data <- data %>% 
+  separate(Clock, sep = ":" , into = c("min","sec"))
 
-  
+data$min <- as.numeric(data$min)
+data$sec <- as.numeric(data$sec)
+
+data <- data %>% 
+  mutate(clock_seconds = ((60-sec) + (20-min)*60)) %>% 
+  mutate(game_second = ((60-sec) + (19-min)*60 + (Period-1)  *1200))
 
 
 
 
-goals <- data %>% 
-  filter(Event == "Goal")
-
-goals_scatter <- ggplot(goals , aes(x=X.Coordinate, y=Y.Coordinate , color = Detail.1)) +
-  geom_point()
-
-goals_scatter
