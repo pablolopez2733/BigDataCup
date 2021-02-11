@@ -1,7 +1,7 @@
 # Big Data Cup
 
 Last push (02/10/21):
-- analyzed xT code from socceraction. **Refer to dissecting_xT.ipynb** 
+- analyzed xT code from socceraction. **Refer to dissecting_xT.ipynb**
 
 Last push (02/09/21):
 - Uploaded ready to use soccer data ("exploring-soccer-models\data-fifa").
@@ -15,3 +15,6 @@ Team:
 * Adrián Cadena
 * Evan
 * Pablo Landeros
+
+
+test
