@@ -35,6 +35,8 @@ shots_scatter <- ggplot(shots , aes(x=X.Coordinate, y=Y.Coordinate , color = Det
   scale_y_continuous(breaks = seq(-40, 40, by = 10))
 
 
-shots_scatter
+# Plot and visulize like in the xT model
+ggplot(shots,aes(x=X.Coordinate,y=Y.Coordinate)) + stat_bin_2d(bins = c(16,12),hjust = 0, vjust = 0)
+
 
 

@@ -8,6 +8,22 @@ library(fastDummies)
 # Read Data:
 data <- read.csv("https://raw.githubusercontent.com/bigdatacup/Big-Data-Cup-2021/main/hackathon_womens.csv")
 scouting <- read.csv("https://raw.githubusercontent.com/bigdatacup/Big-Data-Cup-2021/main/hackathon_scouting.csv")
+nwhl <- read.csv("https://raw.githubusercontent.com/bigdatacup/Big-Data-Cup-2021/main/hackathon_nwhl.csv")
+
+
+# add cell of ocurrence to each event
+l <- 16
+w <- 12
+x1 <- (data$X.Coordinate) / 200 * l
+y1 <- (data$Y.Coordinate) / 85 *w
+x2 <- (data$X.Coordinate.2) / 200 * l
+y2 <- (data$Y.Coordinate.2) / 85 *w
+
+data$x1_cell <- ceiling(x1)
+data$y1_cell <- ceiling(y1)
+data$x2_cell <- ceiling(x2)
+data$y2_cell <- ceiling(y2)
+
 
 
 # Center coordinates on (0,0)
@@ -40,6 +56,8 @@ data <- data %>%
 
 # add binary columns for each event type
 data <- dummy_cols(data, select_columns = "Event")
+
+
 
 
 
