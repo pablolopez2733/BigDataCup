@@ -8,7 +8,7 @@ Last push (02/09/21):
 - No need to run or read "loading-preparing-soccer_data.ipynb"
 - Please read and run "xT-soccer-example.ipynb"; left many comments and observations.
 
-- Adrian
+Adrian
 
 
 Team:
