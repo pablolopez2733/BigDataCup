@@ -1,4 +1,6 @@
 # Big Data Cup
+Last push (02/11/21):
+- Added a column that assigns each event to a cell in a 16 X 12 grid. **See data_wrangling.R**
 
 Last push (02/10/21):
 - analyzed xT code from socceraction. **Refer to dissecting_xT.ipynb**
