@@ -1,6 +1,11 @@
 # Plotting a full NHL Rink------------------------------------------------------------------
-function () {
+library(ggforce)
+library(ggplot2)
+full_rink <- function () {
   
+  NHL_blue <-"darkblue"
+  NHL_red <- "red"
+  NHL_light_blue <- "#32a8a4"
   # Plotting an NHL rink completely following the NHL rule book:
   # https://cms.nhl.bamgrid.com/images/assets/binary/308893668/binary-file/file.pdf
   # Line widths, lengths, colours, all followed as closely as possible
@@ -131,13 +136,14 @@ function () {
     geom_arc(aes(x0 = -72, y0 = 14.5, start = - pi / 2, end = 0, r = 28)) + # Top-Left
     geom_arc(aes(x0 = -72, y0 = -14.5, start = pi, end =  3 * pi / 2, r = 28)) + # Bottom-Left
     
+    theme_bw() +
+    theme(panel.grid = element_blank()) + 
+    
     # Fixed scale for the coordinate system  
     coord_fixed()
 }
 
 # Draw half rink---------------------------------------------------------------------------------------
-library(ggplot2)
-
 gg_rink <- function(side = "right", specs = "nhl"){
   
   ### this function uses ggplot's annotate()
@@ -532,6 +538,7 @@ gg_rink <- function(side = "right", specs = "nhl"){
     )
   )
 }
+
 
 
 
