@@ -1,4 +1,7 @@
 # Big Data Cup
+https://github.com/bigdatacup/Big-Data-Cup-2021
+
+
 Last push (02/11/21):
 - Added a column that assigns each event to a cell in a 16 X 12 grid. **See data_wrangling.R**
 
