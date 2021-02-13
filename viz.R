@@ -1,10 +1,12 @@
 # Before working with this script, run the data_wrangling.R and the plot_rink.R scripts
 
+###########################
+# Plot shots and goals
+##########################
 
 # Shots
 shots <- data %>% 
   filter(Event == "Goal" | Event == "Shot") 
-
 
 # Shots and Goals Location plot
 shots_scatter <- ggplot(shots , aes(x=X.Coordinate, y=Y.Coordinate , color = Detail.1)) +
@@ -37,6 +39,11 @@ shots_scatter <- ggplot(shots , aes(x=X.Coordinate, y=Y.Coordinate , color = Det
 
 # Plot and visulize like in the xT model
 ggplot(shots,aes(x=X.Coordinate,y=Y.Coordinate)) + stat_bin_2d(bins = c(16,12),hjust = 0, vjust = 0)
+
+
+###########################################
+# Plot xT model results
+###########################################
 
 
 

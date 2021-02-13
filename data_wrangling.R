@@ -15,7 +15,7 @@ nwhl <- read.csv("https://raw.githubusercontent.com/bigdatacup/Big-Data-Cup-2021
 l <- 16
 w <- 12
 x1 <- (data$X.Coordinate) / 200 * l
-y1 <- (data$Y.Coordinate) / 85 *w
+y1 <- (data$Y.Coordinate) / 85 * w
 x2 <- (data$X.Coordinate.2) / 200 * l
 y2 <- (data$Y.Coordinate.2) / 85 *w
 
@@ -56,6 +56,9 @@ data <- data %>%
 
 # add binary columns for each event type
 data <- dummy_cols(data, select_columns = "Event")
+
+
+  
 
 
 
