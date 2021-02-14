@@ -80,5 +80,5 @@ data %<>%
 data %<>% na.omit()
 
 #Save
-write.csv(data,'xT_model-Adrian/data_nwhl.csv',row.names = F)
+write.csv(data,'data_nwhl.csv',row.names = F)
 
