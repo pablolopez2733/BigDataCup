@@ -5,11 +5,13 @@ library(ggforce)
 library(ggplot2)
 library(dplyr)
 
-frame <- read.csv("xT_model-Adrian/frame_plot.csv")%>%
+frame <- read.csv("xT/nwhl/frame_plot.csv")%>%
   mutate(
     x = (x/10)-100,
     y = (y/10)-42.5
-  ); color_lines = "white"
+  )
+
+color_lines = "white"
 
 xt_viz <- ggplot() +
   geom_tile(data=frame,aes(x,y,fill=xt)) + 
@@ -171,5 +173,9 @@ xt_viz <- ggplot() +
   labs(
     title= 'Distribution of expected threat (xT) across rink - NWHL',
     fill = 'xT'
-  ); xt_viz + ggsave('plots/nwhl.png',width=7,height=7,dpi=700)
+  ) 
+
+xt_viz + ggsave('xT/plotsnwhl.png',width=7,height=7,dpi=700)
+
+
 
