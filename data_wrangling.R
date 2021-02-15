@@ -24,6 +24,14 @@ data$y1_cell <- ceiling(y1)
 data$x2_cell <- ceiling(x2)
 data$y2_cell <- ceiling(y2)
 
+data <- data %>% 
+  mutate(
+    x1_cell = if_else(x1_cell == 0,1,x1_cell),
+    x2_cell = if_else(x2_cell == 0,1,x2_cell),
+    y1_cell = if_else(y1_cell == 0,1,y1_cell),
+    y2_cell = if_else(y2_cell == 0,1,y2_cell)
+    
+  )
 
 
 # Center coordinates on (0,0)
@@ -57,8 +65,25 @@ data <- data %>%
 # add binary columns for each event type
 data <- dummy_cols(data, select_columns = "Event")
 
+# group by cell and calculate events
+cells <- data %>%
+  group_by(x1_cell,y1_cell) %>% 
+  summarise(
+    shots = sum(Event_Shot),
+    goals = sum(Event_Goal),
+    move = sum(Event_Play,`Event_Incomplete Play`,`Event_Zone Entry`,`Event_Dump In/Out`),
+    events = sum(shots,move)
+  )
 
-  
+# calculate probabilities by cell
+cells <- cells %>% 
+  mutate(
+    shot_prob = shots/events,
+    move_prob = move/events,
+    score_prob = goals/shots,
+    score_prob = ifelse(is.nan(score_prob),0,score_prob)
+  )
+
 
 
 
