@@ -2,6 +2,14 @@
 library(RColorBrewer)
 library(ggforce)
 library(ggplot2)
+library(dplyr)
+library(tidyverse)
+library(plotly)
+library(readxl)
+library(jpeg)
+library(grid)
+library(ggimage)
+
 # NHL_blue <-"darkblue"
 # NHL_red <- "red"
 # NHL_light_blue <- "#32a8a4"
@@ -55,7 +63,6 @@ ggplot(shots,aes(x=X.Coordinate,y=Y.Coordinate)) + stat_bin_2d(bins = c(16,12),h
 # Plot xT model results
 ####################################################################################################
 frame <- read.csv("C:/Users/pablo/Desktop/GithubRepos/BigDataCup/xT_model-Adrian/frame_plot.csv")
-frame <- frame %>% select(-X)
 # Center frame
 frame <- frame %>%
   mutate(
@@ -63,10 +70,9 @@ frame <- frame %>%
     y = y-42.5
   )
 
-
-colors <- RColorBrewer::brewer.pal(name='YlOrRd',n=9)
-alt_red <- "#1f0202"
-alt_yellow <- "#fffb00"
+# Plot
+# Rescaling factor:
+z <- 10
 
 xt_viz <- ggplot() +
   geom_tile(data=frame,aes(x,y,fill=xt)) + 
@@ -195,8 +201,14 @@ xt_viz <- ggplot() +
   geom_arc(aes(x0 = -72, y0 = -14.5, start = pi, end =  3 * pi / 2, r = 28),color = "white") + # Bottom-Left
   
   theme_bw() +
-  theme(panel.grid = element_blank()) + 
-  #scale_fill_gradient(low = alt_red,high = alt_yellow) +
+  theme(panel.grid = element_blank(),
+        axis.line=element_blank(),axis.text.x=element_blank(),
+        axis.text.y=element_blank(),axis.ticks=element_blank(),
+        axis.title.x=element_blank(),
+        axis.title.y=element_blank(),
+        panel.border = element_blank(), 
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank()) + 
   scale_fill_gradientn(colours=c("black", "red","yellow"))+
   
   # Fixed scale for the coordinate system  
@@ -204,4 +216,52 @@ xt_viz <- ggplot() +
   
   
 xt_viz
+ggsave('C:/Users/pablo/Desktop/GithubRepos/BigDataCup/plots/xt_viz.png')
+
+#######################################################################
+# Interactive xT viz 
+#######################################################################
+frame <- read.csv("C:/Users/pablo/Desktop/GithubRepos/BigDataCup/small_matrix.csv")
+
+p <- ggplot(frame, aes(x=x, y=y)) +
+  geom_tile(aes(fill = xt)) +
+  scale_fill_gradientn(colours=c("black", "red","yellow"))+
+  labs(title = "xT for NWHL Big Data cup data")
+
+ggplotly(p)
+
+########################################################
+# Interactive probabilities viz
+########################################################
+# Read 16x12 interpolated xT matrix (created in python)
+frame_1612 <- read.csv("C:/Users/pablo/Desktop/GithubRepos/BigDataCup/xT_1612.csv")
+frame_1612 <- frame_1612 %>% 
+  mutate(
+    x = (x+1),
+    y = (y+1)
+  )
+
+# Join with cells df
+cells$id <- paste(cells$x1_cell, cells$y1_cell, sep=",")
+frame_1612$id <- paste(frame_1612$x, frame_1612$y, sep=",") 
+
+trial <- merge(x = cells, y = frame_1612[ , c("id", "xt")], by = "id", all.x=TRUE)
+
+
+# Plot
+probs <- ggplot()+
+  geom_tile(data=trial,
+            aes(x = x1_cell,y = y1_cell,fill=xt,
+                text = sprintf("Shot Probability: %s<br>Move Probability: %s<br>Score Probability: %s",
+                               shot_prob, move_prob, score_prob))) +
+  scale_fill_gradientn(colours=c("black", "red","yellow"))
+ggplotly(probs)
+
+
+
+
+
+
+
+
 
