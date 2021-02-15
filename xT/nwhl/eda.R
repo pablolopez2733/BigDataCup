@@ -3,7 +3,7 @@ setwd("~/GitHub/BigDataCup")
 library(dplyr)
 library(magrittr)
 
-actions <- read.csv("xT_model-Adrian/xt_table.csv")
+actions <- read.csv("xT/nwhl/xt_table.csv")
 
 actions %<>%
   mutate(

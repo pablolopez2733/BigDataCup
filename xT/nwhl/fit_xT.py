@@ -7,7 +7,7 @@ if module_path not in sys.path:
 from xT import *
 
 data=pd.read_csv('data.csv')
-xTModel = ExpectedThreat(l=16, w=12)
+xTModel = ExpectedThreat(l=16, w=8)
 xTModel.fit(data)
 
 mov_actions = get_successful_move_actions(data)
