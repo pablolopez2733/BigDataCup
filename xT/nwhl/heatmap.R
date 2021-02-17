@@ -99,15 +99,22 @@ xt_viz <- ggplot() +
   geom_arc(aes(x0 = -89, y0 = 0, start = atan(4.5/4) - 0.01, end = pi - atan(4.5 / 4) + 0.01, r = 6), colour = color_lines, size = 2 / 4) + # manually adjusted arc
   geom_line(aes(x = c(-84.755, -89), y = c(-4, -4)),color = color_lines, size = 2 / 4) +
   geom_line(aes(x = c(-84.755, -89), y = c(4, 4)),color = color_lines, size = 2 / 4) +
-  
+
   # Right goalie crease
   geom_line(aes(x = c(84.755, 89), y = c(-4, -4)),color = color_lines, size = 2 / 4) +
   geom_line(aes(x = c(84.755, 89), y = c(4, 4)),color = color_lines, size = 2 / 4) +
   geom_arc(aes(x0 = 89, y0 = 0, start = -atan(4.5/4) + 0.01, end = -pi + atan(4.5 / 4) - 0.01, r = 6), colour = color_lines, size = 2 / 4) + # manually adjusted arc
   
+  #L ratio: 12.50
+  #W ratio: 10.625
+  #
+
   # Goalie nets placed as rectangles
   geom_tile(aes(x = -90.67, y = 0, width = 3.33, height = 6), fill = "white") +
   geom_tile(aes(x = 90.67, y = 0, width = 3.33, height = 6), fill = "white") +
+  
+  # (192.335*16)/200 = 15.3868
+  # (189.005*16)/200 = 15.1204
   
   # Trapezoids
   geom_polygon(aes(x = c(-100, -100, -89, -89), y = c(10.92, 11.08, 7.08, 6.92)), color = color_lines,fill=NA) + # Left

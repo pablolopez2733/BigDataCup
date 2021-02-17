@@ -7,8 +7,8 @@ try:
     from scipy.interpolate import interp2d
 except ImportError:
     interp2d = None
-M: int = 12
-N: int = 18
+M: int = 8
+N: int = 16
 
 def _get_cell_indexes(x: Series, y: Series, l: int = N, w: int = M) -> Tuple[Series, Series]:
     xmin = 0
