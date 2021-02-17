@@ -4,7 +4,7 @@ library(readr)
 library(ggplot2)
 library(fastDummies)
 library(ash)
-library(markovchain)
+
 
 
 #######################################
@@ -65,20 +65,46 @@ event_zones <- function(event_type, as_df){
 
 
 ####################################################################
-# Fit a Markov Chain Model to our data to reveal transition matrix
+# Account for defensive xT and created xT
 ####################################################################
+olympics_xt <- read.csv("C:/Users/pablo/Desktop/GithubRepos/BigDataCup/xT/olympics/xt_table.csv")
+nhl_xt <- read.csv("C:/Users/pablo/Desktop/GithubRepos/BigDataCup/xT/nwhl/xt_table.csv")
+scouting_xt <- read.csv("C:/Users/pablo/Desktop/GithubRepos/BigDataCup/xT/scouting/xt_table.csv")
 
-chain <- data[order(data$game_id,data$game_second),]
-chain <- chain %>% 
-  select(game_id,game_second,Event)
+# add game_id
+nhl_xt <- nhl_xt %>% 
+  group_by(game_date,Home.Team,Away.Team) %>% 
+  mutate(game_id = cur_group_id())
 
-sequence<-chain$Event
-sequenceMatr<-createSequenceMatrix(sequence,sanitize=T)
-mcFitMLE<-markovchainFit(data=sequence)
-mcFitBSP<-markovchainFit(data=sequence,method="bootstrap",nboot=5, name="Bootstrap Mc")
 
-t_matrix_mle <- mcFitMLE$estimate@transitionMatrix
-t_matrix_bootstrap <- mcFitBSP$estimate@transitionMatrix
+
+# add game seconds
+nhl_xt <- nhl_xt %>% 
+  separate(Clock, sep = ":" , into = c("min","sec"))
+
+nhl_xt$min <- as.numeric(nhl_xt$min)
+nhl_xt$sec <- as.numeric(nhl_xt$sec)
+
+nhl_xt <- nhl_xt %>% 
+  mutate(clock_seconds = ((60-sec) + (20-min)*60)) %>% 
+  mutate(game_second = ((60-sec) + (19-min)*60 + (Period-1)  *1200))
+
+nhl_xt <- nhl_xt[order(nhl_xt$game_id,nhl_xt$game_second),]
+
+#add created xT
+nhl_xt <- nhl_xt %>% 
+  mutate(
+    created_xT = lead(xTa)-xTa
+  )
+
+# quienes previenen xT...
+# takeaways, shots and detail1 = , puck recovery, dump in and detail1 = , faceoff win,
+#checar que esto debe ser con created_xT no con xTa
+test <- nhl_xt
+test$aux <- ifelse(is.na(test$xTa),NA,1)
+test <- test %>% dplyr::mutate(xTa = replace_na(xTa, 0))
+test$cxt <- ave(test$xTa, cumsum(is.na(test$aux)), FUN = cumsum)
+
 
 
 
