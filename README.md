@@ -18,6 +18,7 @@ https://github.com/bigdatacup/Big-Data-Cup-2021
 
 -----
 Adrian: 
+
 1- work on the transition matrix GIF 
 
 2- add nxT to the module do step 5
