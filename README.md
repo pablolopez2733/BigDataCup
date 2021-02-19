@@ -4,12 +4,19 @@ https://github.com/bigdatacup/Big-Data-Cup-2021
 ## To do:
 
 1- study xT/data_prep.R 
+
 	Review assumptions, labelling
+
 2- study xT/xt.py <- module / model
+	
 	Assumptions what is a move actions
+
 3- brainstrom think about diff model/improve model
+	
 	implementing exo variables such time/score/# skaters
+	
 	modeling defensive actions (similar to xT but using defensive actions instead of moving actions)  
+
 5 - EDA; ways to get insight using our xT model or other models
 
 
