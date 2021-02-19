@@ -6,14 +6,14 @@ library(ggplot2)
 library(fastDummies)
 
 # Read Data:
-data <- read.csv("https://raw.githubusercontent.com/bigdatacup/Big-Data-Cup-2021/main/hackathon_womens.csv")
+olympics <- read.csv("https://raw.githubusercontent.com/bigdatacup/Big-Data-Cup-2021/main/hackathon_womens.csv")
 scouting <- read.csv("https://raw.githubusercontent.com/bigdatacup/Big-Data-Cup-2021/main/hackathon_scouting.csv")
-nwhl <- read.csv("https://raw.githubusercontent.com/bigdatacup/Big-Data-Cup-2021/main/hackathon_nwhl.csv")
+data <- read.csv("https://raw.githubusercontent.com/bigdatacup/Big-Data-Cup-2021/main/hackathon_nwhl.csv")
 
 
 # add cell of ocurrence to each event
 l <- 16
-w <- 12
+w <- 8
 x1 <- (data$X.Coordinate) / 200 * l
 y1 <- (data$Y.Coordinate) / 85 * w
 x2 <- (data$X.Coordinate.2) / 200 * l
