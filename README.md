@@ -7,7 +7,7 @@ https://github.com/bigdatacup/Big-Data-Cup-2021
 * Review assumptions, labelling
 
 2- study xT/xt.py <- module / model
-* Assumptions what is a move actions
+* Assumptions: what is a move action?
 
 3- brainstrom think about diff model/improve model
 * implementing exo variables such time/score/# skaters
@@ -22,7 +22,7 @@ Adrian:
 
 2- add nxT to the module do step 5
 
-3 - do step 3 of to do
+3 - do step 3 of to do list
 
 -----
 grid search W and L: hyperparameters
