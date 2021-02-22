@@ -1,4 +1,3 @@
-setwd("~/GitHub/BigDataCup")
 
 library(dplyr)
 library(magrittr)
@@ -72,13 +71,25 @@ data %<>%
     end_y = if_else(is.na(end_y) & lead(Team) == Team & lead(Period) == Period, lead(start_y),end_y)
   ) %>% 
   select(
-    -Detail.1,-Detail.2,-Detail.3,-Detail.4,-Home.Team.Skaters,-Away.Team.Skaters,
+    -Detail.1,-Detail.2,-Detail.3,-Detail.4,
     -start_x_2,-start_y_2,-Player.2,-t,-p
     )
 
 #Drop na's
 data %<>% na.omit()
 
-#Save
-write.csv(data,'data_nwhl.csv',row.names = F)
+data_ %>% group_by(Home.Team.Skaters)%>%
+  summarise(
+    n()
+  )
+
+data_ %>% filter(Event=='Shot')%>% group_by(Detail.1)%>%
+  summarise(
+    n()
+  )
+
+
+S#Save
+setwd("~/GitHub/BigDataCup/xT/nwhl")
+write.csv(data,'data.csv',row.names = F)
 
