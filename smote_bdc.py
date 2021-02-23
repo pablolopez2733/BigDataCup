@@ -18,6 +18,8 @@ from matplotlib.pyplot import style
 from sklearn.metrics import f1_score
 import hyperopt
 from hyperopt import fmin, tpe, hp, STATUS_OK, Trials,space_eval
+from imblearn.over_sampling import SMOTE
+from imblearn.pipeline import make_pipeline
 # %matplotlib inline
 style.use('fivethirtyeight')
 
@@ -83,7 +85,7 @@ train_df = df3[(df3.game_id < 40)]
 train_df = train_df.drop(['game_id'],axis=1)
 test_df = df3[(df3.game_id >= 40)]
 test_df = test_df.drop(['game_id','Win'],axis=1)
-test_df.head()
+train_df.shape
 
 #Plotting the value counts of Majority and Minority classes showing that there is an imbalance of plays from winning vs. losing teams
 
@@ -91,3 +93,21 @@ plt.title("Value counts of Classes")
 plt.xlabel('Classes')
 plt.ylabel('Value Counts')
 train_df.Win.value_counts().plot(kind='bar')
+
+#Creating Balanced Data using SMOTE
+#Creating X_train and Y_train variables to better oversample the data
+
+X_train = train_df.iloc[:,0:8]
+Y_train = train_df['Win']
+sm = SMOTE(random_state=123)
+X_train_res, Y_train_res = sm.fit_sample(X_train,Y_train)
+
+#Converting numpy arrays to DataFrames
+
+col_names = train_df.columns.to_list()
+X_train_res = pd.DataFrame(X_train_res)
+Y_train_res = pd.DataFrame(Y_train_res)
+smoted = pd.DataFrame()
+smoted = X_train_res
+smoted['Win'] = Y_train_res
+smoted.head()
