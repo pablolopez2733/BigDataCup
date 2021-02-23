@@ -1,4 +1,3 @@
-setwd("~/GitHub/BigDataCup/xT")
 
 library(dplyr)
 library(magrittr)
@@ -11,10 +10,6 @@ d=rbind(a,b,c)
 data__ = d %>%  
   group_by(game_date,Home.Team,Away.Team) %>% 
   mutate(game_id = cur_group_id()) %>% ungroup()
-
-# data_ <- read.csv("https://raw.githubusercontent.com/bigdatacup/Big-Data-Cup-2021/main/hackathon_nwhl.csv") %>%  
-#   group_by(game_date,Home.Team,Away.Team) %>% 
-#   mutate(game_id = cur_group_id()) %>% ungroup()
 
 
 #rename
@@ -55,11 +50,10 @@ data %<>%
     type_name = if_else(type_name %in% c('Play','Incomplete Play'),'Pass',type_name),
     type_name = if_else(type_name == 'Goal','Shot',type_name),
     success = if_else(type_name == 'Zone Entry' & Detail.1 == 'Dumped',0,success),
-    sec_remaining=(as.integer(sapply(strsplit(Clock,":"), `[`, 1)) * 60) + (as.integer(sapply(strsplit(Clock,":"), `[`, 2))),
+    period_time_remaining=(as.integer(sapply(strsplit(Clock,":"), `[`, 1)) * 60) + (as.integer(sapply(strsplit(Clock,":"), `[`, 2))),
     home = if_else(Team == Home.Team,1,0),
     pos_skaters = if_else(Team == Home.Team,Home.Team.Skaters,Away.Team.Skaters),
     def_skaters = if_else(Team == Home.Team,Away.Team.Skaters,Home.Team.Skaters),
-    skater_dif = pos_skaters - def_skaters
   )
 
 
@@ -75,7 +69,7 @@ data %<>%
     end_y = if_else(type_name=='Pass' & success==1,
                     start_y_2,
                     lead(start_y))
-    ) %>% 
+  ) %>% 
   ungroup() %>%
   mutate(
     #handling some Na's just in case
@@ -86,19 +80,36 @@ data %<>%
     end_y = if_else(is.na(end_y) & lead(Team) == Team & lead(Period) == Period, lead(start_y),end_y),
     end_x = if_else(lead(Team) != Team & success == 0 & type_name %in% c('Pass','Zone Entry'), as.integer(200 - end_x), end_x),
     end_y = if_else(lead(Team) != Team & success == 0 & type_name %in% c('Pass','Zone Entry'), as.integer(85 - end_y), end_y),
-    turnover = if_else(lead(Team) != Team & success == 0 & type_name %in% c('Pass','Zone Entry'), 1, 0)
+    turnover = if_else(lead(Team) != Team & success == 0 & type_name %in% c('Pass','Zone Entry'), 1, 0),
+    #shot_type = if_else(type_name=='Shot', Detail.1, 'no_shot')
   ) %>% 
   select(
-    -Detail.2,-Detail.3,-Detail.4,-Home.Team.Skaters,-Away.Team.Skaters,
-    -start_x_2,-start_y_2,-Player.2,-t,-p
-  ) %>% rename(
-    shot_type = Detail.1
-  )
+    -start_x_2,-start_y_2,-t,-p
+  ) 
 
-#Drop na's
+data %<>% mutate(
+  game_time_remaining = 
+    case_when(
+      Period == 4 ~ period_time_remaining,
+      Period == 3 ~ period_time_remaining + 1200,
+      Period == 2 ~ period_time_remaining + 1200 * 2,
+      Period == 1 ~ period_time_remaining + 1200 * 3
+      ),
+  time =
+    case_when(
+      period_time_remaining <= (5*60) ~ '04',
+      period_time_remaining <= (10*60) ~ '03',
+      period_time_remaining >= (15*60) ~ '01',
+      period_time_remaining <= (15*60) ~ '02'
+    ),
+  goal = if_else(type_name == 'Shot' & success == 1,1,0)
+)
+
+#Drop NA's
 data %<>% na.omit()
 
+
 #Save
-setwd("~/GitHub/BigDataCup/xT")
-write.csv(data,'data_nxt.csv')
+setwd("~/GitHub/BigDataCup/nxTa")
+write.csv(data,'data_premodel.csv',row.names = F)
 

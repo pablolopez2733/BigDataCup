@@ -221,10 +221,6 @@ class ExpectedThreat:
 
         return xT_end - xT_start
     
-    def nxT() -> np.array:
-        grid = self.xT
-        return grid
-    
 def return_xTa_values(actions) -> np.ndarray:
     x = actions.start_x
     y = actions.start_y

@@ -33,13 +33,14 @@ def move_turnover_matrix(actions, l: int = N, w: int = M) -> np.ndarray:
     return turnover_matrix
     
 ####### transform matrix to nxT     
-def nxT_matrix(actions,t,verbose=True) -> np.array:
+def estimate_nxTa_matrix(actions,t,verbose=True) -> np.array:
     w = 8
     l = 16
     actions=actions[actions['time'] == t].copy()
     xTModel = xTa.ExpectedThreat(16, 8)
     xTModel.fit(actions,t)
-    xt = xTModel.xT.reshape(w*l,)
+    xt_matrix = xTModel.xT
+    xt = xt_matrix.reshape(w*l)
     vec = np.zeros(w*l)
     vec2 = np.zeros(w*l)
     if verbose:
@@ -52,34 +53,31 @@ def nxT_matrix(actions,t,verbose=True) -> np.array:
         nxt = xt[i] - oxt
         vec[i]=nxt
         vec2[i]=oxt
+    oxt_matrix = vec2.reshape(w,l)
     nxt_matrix = vec.reshape(w,l)
-    return nxt_matrix
+    return nxt_matrix, oxt_matrix,xt_matrix
 ###
 # Function to get nxTa per time: store in net_xT_augmented_matrices folder
 #####
 
 def nxTa_matrix(t):
-    if t == 1:
-        df1 = pd.read_csv(
-            "../modules/net_xT_augmented_matrices/nxTa_1.csv",
-        header=None)
-        return df1.values
-    if t == 2:
-        df2 = pd.read_csv(
-            "../modules/net_xT_augmented_matrices/nxTa_2.csv",
-        header=None)
-        return df2.values
-    if t == 3:
-        df3 = pd.read_csv(
-            "../modules/net_xT_augmented_matrices/nxTa_3.csv",
-        header=None)
-        return df3.values
-    if t == 4:
-        df4 = pd.read_csv(
-            "../modules/net_xT_augmented_matrices/nxTa_4.csv",
-        header=None)
-        return df4.values
-    
+    df = pd.read_csv(
+        "../modules/net_xT_augmented_matrices/nxTa_"+str(t)+".csv",
+    header=None)
+    return df.values
+
+def oxTa_matrix(t):
+    df = pd.read_csv(
+        "../modules/oxT_augmented_matrices/oxTa_"+str(t)+".csv",
+    header=None)
+    return df.values
+
+def xTa_matrix_(t):
+    df = pd.read_csv(
+        "../modules/xT_augmented_matrices/xTa_"+str(t)+".csv",
+    header=None)
+    return df.values
+
 def get_nxTa(actions,t) -> np.array:
     l = 16
     w = 8
@@ -91,6 +89,26 @@ def get_nxTa(actions,t) -> np.array:
     xT_end = grid[w - 1 - endyc, endxc]
     nxTa = xT_end - xT_start
     return xT_start , xT_end, nxTa
+
+def get_oxTa(actions,t) -> np.array:
+    l = 16
+    w = 8
+    grid = oxTa_matrix(t)
+    actions = actions[actions['time'] == t]
+    startxc, startyc = xTa._get_cell_indexes(actions.start_x, actions.start_y, l, w)
+    endxc, endyc = xTa._get_cell_indexes(actions.end_x, actions.end_y, l, w)
+    oxTa_start = grid[w - 1 - startyc, startxc]
+    return oxTa_start
+
+def get_xTa(actions,t) -> np.array:
+    l = 16
+    w = 8
+    grid = xTa_matrix_(t)
+    actions = actions[actions['time'] == t]
+    startxc, startyc = xTa._get_cell_indexes(actions.start_x, actions.start_y, l, w)
+    endxc, endyc = xTa._get_cell_indexes(actions.end_x, actions.end_y, l, w)
+    xTa_start = grid[w - 1 - startyc, startxc]
+    return xTa_start
 
 def return_nxTa_values(actions) -> np.ndarray:
     import xTa as xTa
@@ -106,10 +124,15 @@ def return_nxTa_values(actions) -> np.ndarray:
         y=data_.start_y
         indx = data_.index
         xTModel.fit(data_,t)
-        start,end,xTa = get_nxTa(data_,t)
+        start,end,nxTa = get_nxTa(data_,t)
+        oxTa= get_oxTa(data_,t)
+        xTa = get_xTa(data_,t)
         frame = pd.DataFrame(
-        data = {'nxTa':xTa,'nxTa_start':start,'nxTa_end':end,'indx':indx,
-               'x_start':x,'y_start':y})
+        data = {'nxTa':nxTa,'nxTa_start':start,'nxTa_end':end,'indx':indx,'oxTa':oxTa,
+                'xTa':xTa
+               #'x_start':x,'y_start':y
+               }
+        )
         lst.append(frame)               
     df = pd.concat(lst)
     df.set_index('indx',drop=True,inplace=True)
