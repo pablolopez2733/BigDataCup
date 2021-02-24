@@ -12,7 +12,7 @@ Original file is located at
 import pandas as pd
 import numpy as np
 import xgboost as xgb
-from xgboost import XGBClassifier
+from xgboost import XGBClassifier, plot_importance, plot_tree
 import matplotlib.pyplot as plt
 from matplotlib.pyplot import style
 from sklearn.metrics import f1_score
@@ -20,8 +20,13 @@ import hyperopt
 from hyperopt import fmin, tpe, hp, STATUS_OK, Trials,space_eval
 from imblearn.over_sampling import SMOTE
 from imblearn.pipeline import make_pipeline
+from google.colab import drive
 # %matplotlib inline
 style.use('fivethirtyeight')
+
+#Mouting Google Drive
+
+drive.mount('/content/gdrive')
 
 #Importing the data from Google Drive and showing the head of the data
 
@@ -68,13 +73,10 @@ df2.head()
 df3 = pd.DataFrame()
 df3['game_id'] = df2['game_id']
 df3['time_remaining(sec)'] = df2['Time_Remaining']
-df3['off_skaters'] = df2['off_skaters']
-df3['def_skaters'] = df2['def_skaters']
 df3['skater_diff'] = df2['skater_diff']
 df3['score_diff'] = df2['score_diff']
-df3['xT'] = df2['xT']
-df3['oxT'] = df2['oxT']
 df3['nxT'] = df2['nxT']
+df3['euclidean_dist'] = np.linalg.norm((df['start_x'].to_numpy(),df['start_y'].to_numpy)-(df['end_x'].to_numpy,df['end_y'].to_numpy))
 df3['Win'] = df2['Win']
 df3.head()
 
@@ -84,8 +86,8 @@ df3.head()
 train_df = df3[(df3.game_id < 40)]
 train_df = train_df.drop(['game_id'],axis=1)
 test_df = df3[(df3.game_id >= 40)]
-test_df = test_df.drop(['game_id','Win'],axis=1)
-train_df.shape
+test_df = test_df.drop(['game_id'],axis=1)
+train_df.head()
 
 #Plotting the value counts of Majority and Minority classes showing that there is an imbalance of plays from winning vs. losing teams
 
@@ -97,7 +99,7 @@ train_df.Win.value_counts().plot(kind='bar')
 #Creating Balanced Data using SMOTE
 #Creating X_train and Y_train variables to better oversample the data
 
-X_train = train_df.iloc[:,0:8]
+X_train = train_df.iloc[:,0:4]
 Y_train = train_df['Win']
 sm = SMOTE(random_state=123)
 X_train_res, Y_train_res = sm.fit_sample(X_train,Y_train)
@@ -107,7 +109,65 @@ X_train_res, Y_train_res = sm.fit_sample(X_train,Y_train)
 col_names = train_df.columns.to_list()
 X_train_res = pd.DataFrame(X_train_res)
 Y_train_res = pd.DataFrame(Y_train_res)
-smoted = pd.DataFrame()
-smoted = X_train_res
-smoted['Win'] = Y_train_res
-smoted.head()
+col_names2 = X_train_res.columns.to_list()
+Y_train_res.head()
+
+#Creating X and Y Dataframes for the testing data
+
+X_test = test_df.iloc[:,0:4]
+Y_test = test_df['Win']
+X_test.columns = col_names2
+X_test.head()
+
+#Creating functions for parameter optimization and scoring with the Hyperopt package
+
+def score(params):
+    model = XGBClassifier(**params)
+    
+    model.fit(X_train_res, Y_train_res, eval_set=[(X_train_res, Y_train_res), (X_test, Y_test)],
+              verbose=False, early_stopping_rounds=10)
+    Y_pred = model.predict(X_test).clip(0, 20)
+    score = (f1_score(Y_test, Y_pred))
+    print(score)
+    return {'loss': score, 'status': STATUS_OK}    
+    
+def optimize(trials, space):
+    
+    best = fmin(score, space, algo=tpe.suggest, max_evals=1000)
+    return best
+
+#Creating the scoring dictionary for the Hyperopt Parameter tuning
+
+space = {
+        'max_depth':hp.choice('max_depth', np.arange(1, 20, 1, dtype=int)),
+        'n_estimators':hp.choice('n_estimators', np.arange(0, 10000, 1, dtype=int)),
+        'colsample_bytree':hp.quniform('colsample_bytree', 0.5, 1.0, 0.1),
+        'min_child_weight':hp.choice('min_child_weight', np.arange(0, 120, 1, dtype=int)),
+        'subsample':hp.quniform('subsample', 0.5, 1, 0.1),
+        'eta':hp.quniform('eta', 0.1, 0.5, 0.1),
+        'learning_rate':hp.choice('learning_rate',np.arange(.1,1.1,.1,dtype=float)),
+        
+        'objective':'binary:logistic',
+    }
+
+#Running n number of trials based on max_evals variable in the optimize function
+
+trials = Trials()
+best_params = optimize(trials, space)
+
+# Return the best parameters
+space_eval(space, best_params)
+
+#Model tuned with best parameters
+
+alg = XGBClassifier(colsample_bytree=0.9,learning_rate=0.1, max_depth=3)
+algs = alg.fit(X_train_res,Y_train_res)
+y_pred = algs.predict(X_test)
+print("F1 Score: " + str(f1_score(Y_test,y_pred)))
+
+y_pred = pd.DataFrame(alg.predict_proba(X_test))
+y_pred.describe()
+
+plot_importance(algs)
+
+col_names
