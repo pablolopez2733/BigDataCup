@@ -1,6 +1,10 @@
 library(tidyverse)
 library(ggplot2)
 library(ggforce)
+library(formattable)
+library(gt)
+library(fastDummies)
+
 
 df <- read.csv("C:/Users/pablo/Desktop/GithubRepos/BigDataCup/analysis.csv")
 
@@ -175,6 +179,81 @@ v <- ggplot()+
 v
 
 
+################Table for xt comparison####################################
+tb <- read.csv("C:/Users/pablo/Desktop/GithubRepos/BigDataCup/analysis_possessionid.csv")
+pt <- tb %>% 
+  group_by(Player) %>% 
+  summarise(
+    nxT = sum(nxT_added)
+  ) %>% 
+  arrange(desc(nxT))
+
+scout  <- read.csv("https://raw.githubusercontent.com/bigdatacup/Big-Data-Cup-2021/main/hackathon_scouting.csv")
+scout <- dummy_cols(scout, select_columns = "Event")
+scout <- scout %>% 
+  mutate(
+    assist = ifelse((Event == "Play" & lead(Event)== "Goal"),1,0)
+  )
+
+pl_trad <- scout %>% 
+  group_by(Player) %>% 
+  summarise(
+    assists = sum(assist),
+    goals = sum(Event_Goal),
+    takeaways = sum(`Event_Puck Recovery`)
+  )
+Rank <- seq(1,nrow(pl_trad))
+ft <- merge(pl_trad, pt, by = "Player") %>% 
+  arrange(desc(nxT))
+
+td <- as.data.frame(cbind(Rank,ft))
+
+# Table
+td %>% 
+  head(20) %>% 
+  gt() %>% 
+  cols_label(
+    assists = "Assists",
+    goals = "Goals",
+    takeaways = "Takeaways"
+  ) %>% 
+  tab_header( 
+    title = "Top 20 Players in Net Expected Threat generated", # ...with this title
+    subtitle = "40 game BDC scouting dataset") %>% 
+  #nxt
+  data_color( # Update cell colors...
+    columns = vars(nxT), # ...for dose column 
+    colors = scales::col_numeric( # <- bc it's numeric
+      palette = c(
+        "white","orange"), # A color scheme (gradient)
+      domain = c(1.6,0.4) # Column scale endpoints
+    )) %>% 
+  #goals
+  data_color( # Update cell colors...
+    columns = vars(goals), # ...for dose column 
+    colors = scales::col_numeric( # <- bc it's numeric
+      palette = c(
+        "white","#2ad4fa"), # A color scheme (gradient)
+      domain = c(0,7) # Column scale endpoints
+    )) %>% 
+  #assists
+  data_color( # Update cell colors...
+    columns = vars(assists), # ...for dose column 
+    colors = scales::col_numeric( # <- bc it's numeric
+      palette = c(
+        "white","#2ad4fa"), # A color scheme (gradient)
+      domain = c(0,4) # Column scale endpoints
+    )) %>% 
+  #takeaways
+  data_color( # Update cell colors...
+    columns = vars(takeaways), # ...for dose column 
+    colors = scales::col_numeric( # <- bc it's numeric
+      palette = c(
+        "white","#2ad4fa"), # A color scheme (gradient)
+      domain = c(30,350) # Column scale endpoints
+    )) %>% 
+  gtsave("top20nxt.pdf",path = "C:/Users/pablo/Desktop/GithubRepos/BigDataCup/Pablo")
 
 
-    
+
+
