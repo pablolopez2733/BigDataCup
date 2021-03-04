@@ -4,9 +4,9 @@ library(ggforce)
 library(formattable)
 library(gt)
 library(fastDummies)
+library(dplyr)
 
-
-df <- read.csv("https://github.com/pablolopez2733/BigDataCup/blob/main/clean_data.csv?raw=true")
+df <- read.csv("C:/Users/pablo/Desktop/GithubRepos/BigDataCup/clean_data.csv")
 
 # Plot sequence ==========================
 NHL_blue <-"black"
