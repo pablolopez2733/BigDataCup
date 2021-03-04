@@ -6,7 +6,7 @@ library(gt)
 library(fastDummies)
 
 
-df <- read.csv("C:/Users/pablo/Desktop/GithubRepos/BigDataCup/analysis.csv")
+df <- read.csv("https://github.com/pablolopez2733/BigDataCup/blob/main/clean_data.csv?raw=true")
 
 # Plot sequence ==========================
 NHL_blue <-"black"
