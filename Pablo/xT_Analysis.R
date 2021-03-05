@@ -58,10 +58,11 @@ v <- ggplot()+
             arrow = arrow(type = "open", 
                           angle = 30,
                           length = unit(0.5, "cm")))+
-  scale_colour_gradient(low = "gray", high = "orange")+
+  scale_colour_gradient(low = "gray", high = "orange",name = 'nxT added')+
   geom_point(data = play, aes(x=start_x, y = start_y, fill = factor(Player)),
              shape = 21,
              size = 4)+
+  labs(title = "Visualizing nxT added in a play")+
   theme_bw() +
   theme(panel.grid = element_blank(),axis.line=element_blank(),axis.text.x=element_blank(),
         axis.text.y=element_blank(),axis.ticks=element_blank(),
@@ -201,6 +202,8 @@ v <- ggplot()+
   coord_fixed()
 v
 
+ggsave('C:/Users/pablo/Desktop/GithubRepos/BigDataCup/Pablo/playviz.png'
+       , dpi = 400)
 # credit table
 total_added <- sum(play$nxT_added[which(play$nxT_added>0)])
 credit <- play %>% 
