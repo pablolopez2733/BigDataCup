@@ -15,28 +15,30 @@ import xgboost as xgb
 from xgboost import XGBClassifier, plot_importance, plot_tree
 import matplotlib.pyplot as plt
 from matplotlib.pyplot import style
-from sklearn.metrics import f1_score
+from sklearn.metrics import f1_score, make_scorer, confusion_matrix, classification_report
 import hyperopt
 from hyperopt import fmin, tpe, hp, STATUS_OK, Trials,space_eval
 from imblearn.over_sampling import SMOTE
 from imblearn.pipeline import make_pipeline
 from google.colab import drive
+from sklearn.model_selection import train_test_split
+import seaborn as sns
 # %matplotlib inline
 style.use('fivethirtyeight')
 
 #Mouting Google Drive
 
-drive.mount('/content/gdrive')
+drive.mount('/content/gdrive',force_remount=True)
 
 #Importing the data from Google Drive and showing the head of the data
 
-path = '/content/gdrive/MyDrive/Experiments/BigDataCup/clean_data.csv'
+path = '/content/gdrive/MyDrive/Experiments/BigDataCup/clean_data_w.csv'
 df = pd.read_csv(path)
 df.head()
 
 #Counting Number of Instances of data per game
 
-df.groupby('game_id')['game_id'].count()
+df.groupby(['game_id','Team'])['game_id'].count()
 
 #Calculating max goals for the home and away teams to later create binary classifier for win and loss
 
@@ -50,18 +52,18 @@ df2 = pd.DataFrame()
 df2['game_id'] = df['game_id']
 df2['home_team'] = df['Home.Team']
 df2['away_team'] = df['Away.Team']
+df2['player'] = df['Player']
 df2['off_team'] = df['Team']
 df2['def_team'] = np.where(df['Team'] != df['Home.Team'], df['Home.Team'], df['Away.Team'])
 df2['Time_Remaining'] = df['game_time_remaining']
 df2['off_skaters'] = np.where(df['Team'] == df['Home.Team'],df['Home.Team.Skaters'],df['Away.Team.Skaters'])
 df2['def_skaters'] = np.where(df['Team'] == df['Away.Team'],df['Away.Team.Skaters'],df['Home.Team.Skaters'])
 df2['skater_diff'] = df2['off_skaters'] - df2['def_skaters']
+df2['Goalie_Pulled'] = np.where(df2['off_skaters'] == 6, 1,0)
 df2['off_team_score'] = np.where(df['Team'] == df['Home.Team'], df['Home.Team.Goals'],df['Away.Team.Goals'])
 df2['def_team_score'] = np.where(df['Team'] == df['Home.Team'], df['Away.Team.Goals'],df['Home.Team.Goals'])
 df2['score_diff'] = df2['off_team_score'] - df2['def_team_score']
 df2['xT'] = df['xT']
-df2['oxT'] = df['oxT']
-df2['nxT'] = df['nxT']
 df2['off_team_final'] = np.where(df['Team'] == df['Home.Team'],df['home_max'],df['away_max'])
 df2['def_team_final'] = np.where(df['Team'] != df['Home.Team'],df['home_max'],df['away_max'])
 df2['Win'] = np.where(df2['off_team_final'] > df2['def_team_final'],1,0)
@@ -72,35 +74,43 @@ df2.head()
 
 df3 = pd.DataFrame()
 df3['game_id'] = df2['game_id']
+df3['player'] = df2['player']
+df3['team'] = df2['off_team']
 df3['time_remaining(sec)'] = df2['Time_Remaining']
 df3['skater_diff'] = df2['skater_diff']
 df3['score_diff'] = df2['score_diff']
-df3['nxT'] = df2['nxT']
-df3['euclidean_dist'] = np.linalg.norm((df['start_x'].to_numpy(),df['start_y'].to_numpy)-(df['end_x'].to_numpy,df['end_y'].to_numpy))
+df3['goalie_pulled'] = df2['Goalie_Pulled']
+df3['xT'] = df2['xT']
 df3['Win'] = df2['Win']
-df3.head()
+df3.describe()
+
+X = df3.drop(['Win','player','team','game_id'],axis=1)
+Y = pd.DataFrame(df3['Win'],columns=['Win'])
+
+X_train, X_test, Y_train, Y_test = train_test_split(X,Y,test_size = 0.3, random_state = 123,stratify = Y)
 
 #Splitting Data into training and testing splits
 #game_id #'s 14-39 are used as the training and 40-53 are used as testing for an ideal 70-30 train test split %
+#Not going to use for now with womans dataset
+#Will split into a validation set to use for later
 
-train_df = df3[(df3.game_id < 40)]
-train_df = train_df.drop(['game_id'],axis=1)
-test_df = df3[(df3.game_id >= 40)]
-test_df = test_df.drop(['game_id'],axis=1)
-train_df.head()
+val_df = df3[(df3.game_id == 60)]
+val_df2 = val_df.drop(['game_id','Win','player','team'],axis=1)
+val_df2.columns = ['0','1','2','3','4'] 
+val_df.head()
 
 #Plotting the value counts of Majority and Minority classes showing that there is an imbalance of plays from winning vs. losing teams
 
-plt.title("Value counts of Classes")
+plt.title("# Of Plays By Losing And Winning Teams")
 plt.xlabel('Classes')
-plt.ylabel('Value Counts')
-train_df.Win.value_counts().plot(kind='bar')
+plt.ylabel('# of plays')
+Y_train.Win.value_counts().plot(kind='bar')
 
 #Creating Balanced Data using SMOTE
 #Creating X_train and Y_train variables to better oversample the data
 
-X_train = train_df.iloc[:,0:4]
-Y_train = train_df['Win']
+#X_train = train_df.drop(['Win'],axis=1)
+#Y_train = train_df['Win']
 sm = SMOTE(random_state=123)
 X_train_res, Y_train_res = sm.fit_sample(X_train,Y_train)
 
@@ -110,64 +120,125 @@ col_names = train_df.columns.to_list()
 X_train_res = pd.DataFrame(X_train_res)
 Y_train_res = pd.DataFrame(Y_train_res)
 col_names2 = X_train_res.columns.to_list()
-Y_train_res.head()
+X_train_res.head()
+
+#Plotting the value counts after SMOTE is applied
+
+plt.title("# Of Plays By Losing And Winning Teams")
+plt.xlabel('Classes')
+plt.ylabel('# of plays')
+Y_train_res.value_counts().plot(kind='bar')
 
 #Creating X and Y Dataframes for the testing data
+#Also do not need this with womans hockey data, performed above with sklearn train test split method
 
-X_test = test_df.iloc[:,0:4]
-Y_test = test_df['Win']
+#X_test = test_df.drop(['Win'],axis=1)
+#Y_test = test_df['Win']
 X_test.columns = col_names2
 X_test.head()
 
+#creating a scorer from the f1-score metric
+f1_scorer = make_scorer(f1_score)
+
 #Creating functions for parameter optimization and scoring with the Hyperopt package
 
-def score(params):
-    model = XGBClassifier(**params)
+def hyperparameter_tuning(space):
+    clf = xgb.XGBClassifier(n_estimators = int(space['n_estimators']),       #number of trees to use
+                            eta = space['eta'],                              #learning rate
+                            max_depth = int(space['max_depth']),             #depth of trees
+                            gamma = space['gamma'],                          #loss reduction required to further partition tree
+                            reg_alpha = int(space['reg_alpha']),             #L1 regularization for weights
+                            reg_lambda = space['reg_lambda'],                #L2 regularization for weights
+                            min_child_weight = space['min_child_weight'],    #minimum sum of instance weight needed in child
+                            colsample_bytree = space['colsample_bytree'],    #ratio of column sampling for each tree
+                            nthread = -1)                                    #number of parallel threads used
     
-    model.fit(X_train_res, Y_train_res, eval_set=[(X_train_res, Y_train_res), (X_test, Y_test)],
-              verbose=False, early_stopping_rounds=10)
-    Y_pred = model.predict(X_test).clip(0, 20)
-    score = (f1_score(Y_test, Y_pred))
-    print(score)
-    return {'loss': score, 'status': STATUS_OK}    
+    evaluation = [(X_train_res, Y_train_res), (X_test, Y_test)]
     
-def optimize(trials, space):
-    
-    best = fmin(score, space, algo=tpe.suggest, max_evals=1000)
-    return best
+    clf.fit(X_train_res, Y_train_res,
+            eval_set = evaluation,
+            early_stopping_rounds = 10,
+            verbose = False)
+
+    pred = clf.predict(X_test)
+    pred = [1 if i>= 0.5 else 0 for i in pred]
+    f1 = f1_score(Y_test, pred)
+    print ("SCORE:", f1)
+    return {'loss': -f1, 'status': STATUS_OK }
 
 #Creating the scoring dictionary for the Hyperopt Parameter tuning
 
-space = {
-        'max_depth':hp.choice('max_depth', np.arange(1, 20, 1, dtype=int)),
-        'n_estimators':hp.choice('n_estimators', np.arange(0, 10000, 1, dtype=int)),
-        'colsample_bytree':hp.quniform('colsample_bytree', 0.5, 1.0, 0.1),
-        'min_child_weight':hp.choice('min_child_weight', np.arange(0, 120, 1, dtype=int)),
-        'subsample':hp.quniform('subsample', 0.5, 1, 0.1),
-        'eta':hp.quniform('eta', 0.1, 0.5, 0.1),
-        'learning_rate':hp.choice('learning_rate',np.arange(.1,1.1,.1,dtype=float)),
-        
-        'objective':'binary:logistic',
-    }
+space = {'eta': hp.uniform("eta", 0.1, 0.5),
+        'max_depth': hp.quniform("max_depth", 1, 10, 1),
+        'gamma': hp.uniform ('gamma', 1,5),
+        'reg_alpha' : hp.quniform('reg_alpha', 0, 1000, 1),
+        'reg_lambda' : hp.uniform('reg_lambda', 0, 1000),
+        'colsample_bytree' : hp.uniform('colsample_bytree', 0.5, 1),
+        'min_child_weight' : hp.quniform('min_child_weight', 0, 120, 1),
+        'n_estimators': hp.quniform('n_estimators', 100, 200, 10)
+        }
 
 #Running n number of trials based on max_evals variable in the optimize function
 
 trials = Trials()
-best_params = optimize(trials, space)
+best = fmin(fn = hyperparameter_tuning,
+            space = space,
+            algo = tpe.suggest,
+            max_evals = 1000,
+            trials = trials)
 
-# Return the best parameters
-space_eval(space, best_params)
+print (best)
 
 #Model tuned with best parameters
+#This needs to be improved big time
 
-alg = XGBClassifier(colsample_bytree=0.9,learning_rate=0.1, max_depth=3)
+alg = XGBClassifier(colsample_bytree=1,eta=0.34, max_depth=10,min_child_weight=95,n_estimators=110,gamma = 2.04,reg_alpha=22, reg_lambda=5.77)
 algs = alg.fit(X_train_res,Y_train_res)
 y_pred = algs.predict(X_test)
 print("F1 Score: " + str(f1_score(Y_test,y_pred)))
+print(classification_report(Y_test,y_pred))
 
-y_pred = pd.DataFrame(alg.predict_proba(X_test))
-y_pred.describe()
+#Creating visualization of confusion matrix
+
+matrix = confusion_matrix(Y_test,y_pred)
+sns.heatmap(matrix, annot=True,robust=True,)
+plt.title("Confusion Matrix of WP Model Testing")
+plt.ylabel('Predicted')
+plt.xlabel("Actual")
 
 plot_importance(algs)
 
 col_names
+
+#Creating WP Added chart on player level based on Game ID 60
+import sys
+
+val_pred = algs.predict_proba(val_df2)
+val_pred = pd.DataFrame(val_pred,columns=['losing','winning'])
+val_preds = pd.DataFrame()
+val_preds['losing'] = (val_pred['losing']*100)
+val_preds['winning'] = (val_pred['winning']*100)
+
+from google.colab import files
+
+val_preds.to_csv('vals.csv')
+files.download('vals.csv')
+
+files.upload()
+
+def rolling_average(df,window):
+  return df.rolling(min_periods=1,window=window).mean().shift(1)
+
+def current_average(df):
+  return df.rolling(min_periods=1,window=window).mean()
+
+val_test = pd.read_csv('val_test.csv')
+val_test.head()
+
+val_test['WPA'] = val_test['winning'] - round(val_test.groupby('team')['winning'].apply(lambda x: rolling_average(x,1)),2)
+val_test = val_test.fillna(0)
+val_test.head()
+
+wp_chart = val_test.groupby(['player','team'],as_index=False)['WPA'].mean().round(2)
+wp_chart = wp_chart.sort_values(by='WPA',ascending=False)
+wp_chart.head()
