@@ -4,6 +4,7 @@ library(ggforce)
 library(formattable)
 library(gt)
 library(fastDummies)
+library(brew)
 library(dplyr)
 
 df <- read.csv("C:/Users/pablo/Desktop/GithubRepos/BigDataCup/analysis_possessionid.csv")
@@ -46,20 +47,27 @@ assists <- scout %>% filter(assist == 1)
 play <- df %>% 
   filter(possession_id == "142112Sudbury Wolves")
 play <- play %>% head(4)
+play$nxT_added[which(play$Player == "Quinton Byfield")] <- 0.054676825
 
 
 # Create plot
 v <- ggplot()+
   geom_path(data = play,
-            aes(x=start_x, y = start_y, group = 1, colour = factor(Player)),
+            aes(x=start_x, y = start_y, colour = nxT_added),
             size = 1.5,
-            arrow = arrow(type = "open", angle = 30, length = unit(0.5, "cm")))+
-  geom_point(data = play, aes(x=start_x, y = start_y, fill = nxT_added),
+            arrow = arrow(type = "open", 
+                          angle = 30,
+                          length = unit(0.5, "cm")))+
+  scale_colour_gradient(low = "gray", high = "orange")+
+  geom_point(data = play, aes(x=start_x, y = start_y, fill = factor(Player)),
              shape = 21,
              size = 4)+
   theme_bw() +
-  theme(panel.grid = element_blank()) + 
-  scale_fill_gradientn(colours=c("green", "yellow","red")) +
+  theme(panel.grid = element_blank(),axis.line=element_blank(),axis.text.x=element_blank(),
+        axis.text.y=element_blank(),axis.ticks=element_blank(),
+        axis.title.x=element_blank(),
+        axis.title.y=element_blank()) + 
+  #scale_colour_brewer(palette = "Greens") +
 
   ############################Plot Rink##############################################
   # Plot rink
@@ -187,8 +195,7 @@ v <- ggplot()+
   geom_arc(aes(x0 = -72, y0 = 14.5, start = - pi / 2, end = 0, r = 28)) + # Top-Left
   geom_arc(aes(x0 = -72, y0 = -14.5, start = pi, end =  3 * pi / 2, r = 28)) + # Bottom-Left
 ##########################################################################################  
-  theme_bw() +
-  theme(panel.grid = element_blank()) + 
+
   
   # Fixed scale for the coordinate system  
   coord_fixed()
@@ -233,6 +240,10 @@ credit %>%
         "white","#52bdfa"), # A color scheme (gradient)
       domain = c(0,0.055) # Column scale endpoints
     )) %>% 
+  fmt_missing(
+    columns = vars(nxT_added,credit),
+    missing_text = "-"
+  ) %>% 
   gtsave("credit_table.png",path = "C:/Users/pablo/Desktop/GithubRepos/BigDataCup/Pablo")
 
   
