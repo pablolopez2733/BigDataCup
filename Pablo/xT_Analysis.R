@@ -44,7 +44,8 @@ heads <- df %>%
 assists <- scout %>% filter(assist == 1)
 
 play <- df %>% 
-  filter(play_id == 2160)
+  filter(possession_id == "142112Sudbury Wolves")
+play <- play %>% head(4)
 
 
 # Create plot
@@ -53,7 +54,7 @@ v <- ggplot()+
             aes(x=start_x, y = start_y, group = 1, colour = factor(Player)),
             size = 1.5,
             arrow = arrow(type = "open", angle = 30, length = unit(0.5, "cm")))+
-  geom_point(data = play, aes(x=start_x, y = start_y, fill = nxT),
+  geom_point(data = play, aes(x=start_x, y = start_y, fill = nxT_added),
              shape = 21,
              size = 4)+
   theme_bw() +
@@ -193,6 +194,51 @@ v <- ggplot()+
   coord_fixed()
 v
 
+# credit table
+total_added <- sum(play$nxT_added[which(play$nxT_added>0)])
+credit <- play %>% 
+  select(Player, type_name,nxT_added) %>% 
+  mutate(credit = (nxT_added/total_added) *100) %>% 
+  mutate_at(vars(credit), funs(round(., 2)))
+
+credit$nxT_added[which(credit$Player == "Quinton Byfield")] <- NA
+credit$credit[which(credit$Player == "Quinton Byfield")] <- NA
+credit$type_name[which(credit$Player == "Quinton Byfield")] <- "Goal"
+
+
+
+credit %>%
+  gt() %>% 
+  cols_label(
+    credit = "net nxT change %",
+    type_name = "Event",
+    nxT_added = "nxT added"
+  ) %>% 
+  tab_header( 
+    title = "nxT Credit Distribution in a Sunbury Wolves goal", # ...with this title
+    subtitle = "") %>% 
+  #nxt
+  data_color( # Update cell colors...
+    columns = vars(credit), # ...for dose column 
+    colors = scales::col_numeric( # <- bc it's numeric
+      palette = c(
+        "white","orange"), # A color scheme (gradient)
+      domain = c(0,100) # Column scale endpoints
+    )) %>% 
+  #nxt
+  data_color( # Update cell colors...
+    columns = vars(nxT_added), # ...for dose column 
+    colors = scales::col_numeric( # <- bc it's numeric
+      palette = c(
+        "white","#52bdfa"), # A color scheme (gradient)
+      domain = c(0,0.055) # Column scale endpoints
+    )) %>% 
+  gtsave("credit_table.png",path = "C:/Users/pablo/Desktop/GithubRepos/BigDataCup/Pablo")
+
+  
+
+
+
 
 ################Table for xt comparison####################################
 tb <- read.csv("C:/Users/pablo/Desktop/GithubRepos/BigDataCup/analysis_possessionid.csv")
@@ -227,13 +273,15 @@ pl_trad <- scout %>%
   )
 
 
-Rank <- seq(1,nrow(pl_trad))
-
 
 ft <- merge(pl_trad, pt, by = "Player") %>% 
   arrange(desc(nxt_per_play))
+Rank <- seq(1,nrow(ft))
 
 td <- as.data.frame(cbind(Rank,ft))
+td <- td %>%
+  mutate_at(vars(nxt_per_play), funs(round(., 4))) %>% 
+  mutate_at(vars(total_nxT), funs(round(., 2)))
 
 # Table==========================
 td %>% 
@@ -261,14 +309,14 @@ td %>%
     colors = scales::col_numeric( # <- bc it's numeric
       palette = c(
         "white","orange"), # A color scheme (gradient)
-      domain = c(0.008,0.004) # Column scale endpoints
+      domain = c(0.008,0.003) # Column scale endpoints
     )) %>% 
   data_color( # Update cell colors...
     columns = vars(total_nxT), # ...for dose column 
     colors = scales::col_numeric( # <- bc it's numeric
       palette = c(
         "white","orange"), # A color scheme (gradient)
-      domain = c(0.2,0.91) # Column scale endpoints
+      domain = c(0.19,1.35) # Column scale endpoints
     )) %>% 
   tab_source_note(
     source_note = md("Data: 40 game BDC scouting dataset.")
